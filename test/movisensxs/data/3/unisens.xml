@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<unisens timestampStart="2025-04-10T14:13:48.945" version="2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.unisens.org/unisens2.0 http://www.unisens.org/unisens2.0/unisens.xsd" xmlns="http://www.unisens.org/unisens2.0">
+    <customAttributes>
+        <customAttribute key="study" value="sensing all constructs test"/>
+        <customAttribute key="probandId" value="3"/>
+        <customAttribute key="MOVISENSXS_UNISENS_FILE_ID" value="0"/>
+        <customAttribute key="studyId" value="14768"/>
+        <customAttribute key="MOVISENSXS_UNISENS_VERSION" value="1"/>
+        <customAttribute key="version" value="2025-04-10 14:09:31"/>
+    </customAttributes>
+    <valuesEntry dataType="int32" id="BatteryLevel.csv" lsbValue="1" sampleRate="1" unit="%">
+        <csvFileFormat decimalSeparator="." separator=","/>
+        <channel name="BatteryLevel"/>
+    </valuesEntry>
+    <valuesEntry dataType="int32" id="DeviceRunning.csv" lsbValue="1" sampleRate="1">
+        <csvFileFormat decimalSeparator="." separator=","/>
+        <channel name="DeviceRunning"/>
+    </valuesEntry>
+    <valuesEntry dataType="int32" id="DisplayOn.csv" lsbValue="1" sampleRate="1">
+        <csvFileFormat decimalSeparator="." separator=","/>
+        <channel name="DisplayOn"/>
+    </valuesEntry>
+    <valuesEntry dataType="int32" id="Steps.csv" lsbValue="1" sampleRate="1">
+        <csvFileFormat decimalSeparator="." separator=","/>
+        <channel name="Steps"/>
+    </valuesEntry>
+    <valuesEntry dataType="int32" id="ActivityLog.csv" lsbValue="1" sampleRate="1">
+        <csvFileFormat decimalSeparator="." separator=","/>
+        <channel name="Activity"/>
+        <channel name="Confidence"/>
+    </valuesEntry>
+    <valuesEntry dataType="double" id="Location.csv" lsbValue="1" sampleRate="1">
+        <csvFileFormat decimalSeparator="." separator=","/>
+        <channel name="Latitude"/>
+        <channel name="Longitude"/>
+        <channel name="Altitude"/>
+        <channel name="Accuracy"/>
+    </valuesEntry>
+    <eventEntry commentLength="10000" id="AppUsage.csv" sampleRate="1" typeLength="10000">
+        <csvFileFormat decimalSeparator="." separator=","/>
+    </eventEntry>
+    <eventEntry commentLength="10000" id="Beacon.csv" sampleRate="1" typeLength="10000">
+        <csvFileFormat decimalSeparator="." separator=","/>
+    </eventEntry>
+    <eventEntry commentLength="10000" id="NotificationLog.csv" sampleRate="1" typeLength="10000">
+        <csvFileFormat decimalSeparator="." separator=","/>
+    </eventEntry>
+    <eventEntry commentLength="10000" id="MusicLog.csv" sampleRate="1" typeLength="10000">
+        <csvFileFormat decimalSeparator="." separator=","/>
+    </eventEntry>
+    <valuesEntry dataType="uint32" id="TrafficRx.csv" lsbValue="1" sampleRate="1" unit="Byte">
+        <csvFileFormat decimalSeparator="." separator=","/>
+        <channel name="App"/>
+        <channel name="Mobile"/>
+        <channel name="Total"/>
+    </valuesEntry>
+    <valuesEntry dataType="uint32" id="TrafficTx.csv" lsbValue="1" sampleRate="1" unit="Byte">
+        <csvFileFormat decimalSeparator="." separator=","/>
+        <channel name="App"/>
+        <channel name="Mobile"/>
+        <channel name="Total"/>
+    </valuesEntry>
+    <eventEntry commentLength="10000" id="keyboard_input.csv" sampleRate="1000" typeLength="10000">
+        <csvFileFormat decimalSeparator="." separator=","/>
+    </eventEntry>
+    <eventEntry commentLength="10000" id="RecordedAudio.csv" sampleRate="1" typeLength="10000">
+        <csvFileFormat decimalSeparator="." separator=","/>
+    </eventEntry>
+    <eventEntry commentLength="10000" id="PhoneCallActivity.csv" sampleRate="1" typeLength="10000">
+        <csvFileFormat decimalSeparator="." separator=","/>
+    </eventEntry>
+    <eventEntry commentLength="10000" id="SMSActivity.csv" sampleRate="1" typeLength="10000">
+        <csvFileFormat decimalSeparator="." separator=","/>
+    </eventEntry>
+</unisens>

@@ -1,0 +1,39 @@
+<?xml version='1.0'?>
+<Base>
+    <Platform Name="Palm Research" />
+    <Project Name="" Id="12345" Sex="Female" />
+    <Session Type="Custom" Day="1" TestName="Test" TotalTime="123" Data="29 Apr 2025 09:00" TimerInterrupted="false" >
+        <Question Name="1" >
+            <Control Type="double" Data="1" Guid="35bfd5f3-d7c1-4ca1-8e64-8714b81fb8e6" Name="relaxed" />
+            <Control Type="double" Data="2" Guid="ea42b30b-8c88-405f-bd21-b6554c750265" Name="unwell" />
+            <Control Type="double" Data="3" Guid="ffb2bff7-f2f7-43df-8633-6e890580836e" Name="energetic" />
+            <Control Type="double" Data="4" Guid="8e0ec0dc-0d50-460a-991d-75df05e7dace" Name="tired" />
+            <Control Type="double" Data="5" Guid="26e9cc9f-7e55-4c38-a196-4bb783f68970" Name="content" />
+            <Control Type="double" Data="6" Guid="9aa11f07-8186-417d-be42-1d01a3ed9fa0" Name="agitated" />
+        </Question>
+        <Question Name="2" >
+            <Control Type="string" Data="Checked" Guid="6eeb0045-7892-4662-9503-6cf61f3a8860" Name="hungry" />
+        </Question>
+        <Question Name="3" >
+            <Control Type="string" Data="sleeping" Guid="a69d91b5-4f4a-4a8c-89c3-6ca7635fbd46" Name="description" />
+        </Question>
+    </Session>
+    <Session Type="Custom" Day="1" TestName="Test" TotalTime="2760" Data="29 Apr 2025 10:00" TimerInterrupted="true" />
+    <Session Type="Custom" Day="1" TestName="Test" TotalTime="234" Data="29 Apr 2025 12:00" TimerInterrupted="false" >
+        <Question Name="1" >
+            <Control Type="double" Data="6" Guid="35bfd5f3-d7c1-4ca1-8e64-8714b81fb8e6" Name="relaxed" />
+            <Control Type="double" Data="5" Guid="ea42b30b-8c88-405f-bd21-b6554c750265" Name="unwell" />
+            <Control Type="double" Data="4" Guid="ffb2bff7-f2f7-43df-8633-6e890580836e" Name="energetic" />
+            <Control Type="double" Data="3" Guid="8e0ec0dc-0d50-460a-991d-75df05e7dace" Name="tired" />
+            <Control Type="double" Data="2" Guid="26e9cc9f-7e55-4c38-a196-4bb783f68970" Name="content" />
+            <Control Type="double" Data="1" Guid="9aa11f07-8186-417d-be42-1d01a3ed9fa0" Name="agitated" />
+        </Question>
+        <Question Name="2" >
+            <Control Type="string" Data="Unchecked" Guid="6eeb0045-7892-4662-9503-6cf61f3a8860" Name="hungry" />
+        </Question>
+        <Question Name="3" >
+            <Control Type="string" Data="eating" Guid="a69d91b5-4f4a-4a8c-89c3-6ca7635fbd46" Name="description" />
+        </Question>
+    </Session>
+    <Session Type="Custom" Day="1" TestName="Test" TotalTime="2760" Data="29 Apr 2025 20:00" TimerInterrupted="true" />
+</Base>

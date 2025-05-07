@@ -1,0 +1,2 @@
+29493,Call,type=Outgoing|number={"ONE_WAY_HASH":"125ad552a1a0e0e0ac7d9dfc9142450c4326b828"}|duration=65|time=12:08:07|date=2025-03-04
+29522,Call,type=OutgoingNotReached|number={"ONE_WAY_HASH":"3c9da06a5704d3563eed73cd81d33d3d32777034"}|duration=0|time=22:28:04|date=2025-04-10

@@ -1,0 +1,3 @@
+20679,Call,type=IncomingMissed|number={"ONE_WAY_HASH":"3e267aa01c51ff0b3f8c22f3086b24e8e1fbcc62"}|duration=0|time=19:57:42|date=2025-04-10
+24853,Call,type=OutgoingNotReached|number={"ONE_WAY_HASH":"3e267aa01c51ff0b3f8c22f3086b24e8e1fbcc62"}|duration=0|time=21:07:33|date=2025-04-10
+26635,Call,type=Outgoing|number={"ONE_WAY_HASH":"b8e748d2ac470a5e6e907e0de39f3ed63b2e6e24"}|duration=1758|time=21:08:11|date=2025-04-10
