@@ -5,7 +5,7 @@
 
 ## Installation
 
-Follow the instructions on [https://julialang.org/downloads/](https://julialang.org/downloads/) to download and install Julia (if you have not already).
+Follow the instructions on [https://julialang.org/install/](https://julialang.org/install/) to download and install Julia (if you have not already).
 
 Type `]` in the Julia REPL to enter the package manager REPL mode und run
 
