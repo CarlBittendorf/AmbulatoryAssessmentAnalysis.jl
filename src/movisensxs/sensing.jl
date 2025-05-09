@@ -337,8 +337,8 @@ function _movisensxs_unisens_attribute(xml, key)
     return xml[index]["value"]
 end
 
-function _movisensxs_process(
-        ::Type{T}, sources, unisens; callback) where {T <: MovisensXSMobileSensing}
+function _movisensxs_process(::Type{T}, sources, unisens;
+        callback = (df, participantid, studyid) -> df) where {T <: MovisensXSMobileSensing}
     xml = XML.read(unisens, XML.Node)
     start = DateTime(xml[2]["timestampStart"])
     participantid = _movisensxs_unisens_attribute(xml[2][1], "probandId")
@@ -357,30 +357,18 @@ function _movisensxs_process(
 end
 
 function _movisensxs_gather(
-        ::Type{T}, sources, unisens, names; callback) where {T <: MovisensXSMobileSensing}
+        ::Type{T}, sources, unisens, names; args...) where {T <: MovisensXSMobileSensing}
     if isempty(sources)
         return DataFrame((x => [] for x in variablenames(T))...)
     elseif length(sources) == 1
-        return _movisensxs_process(T, only(sources), unisens; callback)
+        return _movisensxs_process(T, only(sources), unisens; args...)
     else
         # sort the sources by their order in filenames
         indices = sort(
             eachindex(names); by = i -> findfirst(x -> endswith(names[i], x), filenames(T)))
 
-        return _movisensxs_process(T, sources[indices], unisens; callback)
+        return _movisensxs_process(T, sources[indices], unisens; args...)
     end
-end
-
-function _movisensxs_gather_zipfile(
-        ::Type{T}, x::AbstractVector{UInt8}; callback) where {T <: MovisensXSMobileSensing}
-    archive = ZipReader(x)
-    names = filter(
-        name -> any(x -> endswith(name, x), filenames(T)), zip_names(archive))
-    sources = IOBuffer.([zip_readentry(archive, name) for name in names])
-    index = findfirst(x -> endswith(x, "unisens.xml"), zip_names(archive))
-    unisens = zip_readentry(archive, zip_names(archive)[index]) |> IOBuffer
-
-    return _movisensxs_gather(T, sources, unisens, names; callback)
 end
 
 ####################################################################################################
@@ -388,7 +376,7 @@ end
 ####################################################################################################
 
 """
-    gather(path, ::Type{T}; callback) where {T <: MovisensXSMobileSensing} -> DataFrame
+    gather(path, T; callback) where {T <: MovisensXSMobileSensing} -> DataFrame
 
 Recursively read and process all mobile sensing data of type `T` in `path` and, if applicable,
 the subfolders of `path`.
@@ -397,8 +385,8 @@ the subfolders of `path`.
 three arguments: A `DataFrame` (containing the column "SecondsSinceStart"), the participant ID and
 the study ID. It should return a `DataFrame` with the same column names.
 """
-function gather(path::AbstractString, ::Type{T};
-        callback = (df, participantid, studyid) -> df) where {T <: MovisensXSMobileSensing}
+function gather(
+        path::AbstractString, ::Type{T}; args...) where {T <: MovisensXSMobileSensing}
     !isdir(path) && !iszipfile(path) && return load(path, T)
 
     if isdir(path)
@@ -409,29 +397,44 @@ function gather(path::AbstractString, ::Type{T};
             filter!(x -> isdir(x) || iszipfile(x), paths)
 
             # recursively go through sub-directories and zip files and concatenate the results
-            return vcat((gather(x, T; callback) for x in paths)...)
+            return vcat((gather(x, T; args...) for x in paths)...)
         else
             names = filter(path -> any(x -> endswith(path, x), filenames(T)), paths)
 
-            return _movisensxs_gather(T, names, paths[index], names; callback)
+            return _movisensxs_gather(T, names, paths[index], names; args...)
         end
     else
-        return _movisensxs_gather_zipfile(T, read(path); callback)
+        return gather(read(path), T; args...)
     end
 end
 
-function gather(x::AbstractVector{UInt8}, ::Type{T};
-        callback = (df, participantid, studyid) -> df) where {T <: MovisensXSMobileSensing}
-    _movisensxs_gather_zipfile(T, x; callback)
+function gather(archive::ZipReader, ::Type{T}; args...) where {T <: MovisensXSMobileSensing}
+    index = findfirst(x -> endswith(x, "unisens.xml"), zip_names(archive))
+
+    if isnothing(index)
+        zipfiles = filter(endswith(x, ".zip"), zip_names(archive))
+
+        return vcat((gather(zip_readentry(archive, x), T; args...) for x in zipfiles)...)
+    else
+        names = filter(
+            name -> any(x -> endswith(name, x), filenames(T)), zip_names(archive))
+        sources = [IOBuffer(zip_readentry(archive, name)) for name in names]
+        unisens = IOBuffer(zip_readentry(archive, zip_names(archive)[index]))
+
+        return _movisensxs_gather(T, sources, unisens, names; args...)
+    end
 end
 
-function gather(io::IOBuffer, ::Type{T};
-        callback = (df, participantid, studyid) -> df) where {T <: MovisensXSMobileSensing}
-    _movisensxs_gather_zipfile(T, read(io); callback)
+gather(x::AbstractVector{UInt8}, T::Type; args...) = gather(ZipReader(x), T; args...)
+
+gather(io::IO, T::Type; args...) = gather(read(io), T; args...)
+
+function gather(dict::Dict{String, IO}, T::Type; args...)
+    vcat((gather(dict[x], T; args...) for x in filter(endswith(".zip"), keys(dict)))...)
 end
 
 """
-    aggregate(df, Type{<:MovisensXSMobileSensing}, period) -> DataFrame
+    aggregate(df, T, period) -> DataFrame
 
 Aggregate mobile sensing data at the level of `period` (e.g. `Day(1)` or `Hour(6)`).
 

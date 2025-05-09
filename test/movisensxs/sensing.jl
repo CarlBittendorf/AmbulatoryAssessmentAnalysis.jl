@@ -22,6 +22,14 @@
         # folder containing both zip files and unisens folders
         @test gather("movisensxs/data", T) isa DataFrame
         @test names(gather("movisensxs/data", T)) == variablenames(T)
+
+        # Dict{String,IO}
+        dict = Dict{String, IO}(
+            "1.zip" => IOBuffer(read("movisensxs/data/1.zip")),
+            "2.zip" => IOBuffer(read("movisensxs/data/2.zip")),
+            "test.txt" => IOBuffer(b"AmbulatoryAssessmentAnalysis.jl")
+        )
+        @test names(gather(dict, T)) == variablenames(T)
     end
 
     for T in (
