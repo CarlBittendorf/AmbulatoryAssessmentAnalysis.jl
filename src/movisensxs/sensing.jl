@@ -397,10 +397,8 @@ the subfolders of `path`.
 three arguments: A `DataFrame` (containing the column "SecondsSinceStart"), the participant ID and
 the study ID. It should return a `DataFrame` with the same column names.
 """
-function gather(
-        path::AbstractString, ::Type{T};
-        callback = (df, participantid, studyid) -> df
-) where {T <: MovisensXSMobileSensing}
+function gather(path::AbstractString, ::Type{T};
+        callback = (df, participantid, studyid) -> df) where {T <: MovisensXSMobileSensing}
     !isdir(path) && !iszipfile(path) && return load(path, T)
 
     if isdir(path)
@@ -411,7 +409,7 @@ function gather(
             filter!(x -> isdir(x) || iszipfile(x), paths)
 
             # recursively go through sub-directories and zip files and concatenate the results
-            return vcat((gather(x, T) for x in paths)...)
+            return vcat((gather(x, T; callback) for x in paths)...)
         else
             names = filter(path -> any(x -> endswith(path, x), filenames(T)), paths)
 
