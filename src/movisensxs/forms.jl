@@ -201,15 +201,23 @@ end
 
 function preprocess(df::DataFrame, ::Type{MovisensXSForms})
     @chain df begin
+        transform(
+            :Participant => ByRow(x -> round(Int, x)),
+            :Form => ByRow(x -> x == "Missing");
+            renamecols = false
+        )
         rename(
+            :Participant => :MovisensXSParticipantID,
             :Trigger_date => :FormTrigger,
+            :Form => :IsMissing,
             :Form_start_date => :FormStart,
             :Form_finish_date => :FormFinish,
-            :Form_upload_date => :FormUpload
+            :Form_upload_date => :FormUpload,
+            :Missing => :ReasonForMissing
         )
         select(Not(:Trigger_time, :Form_start_time, :Form_finish_time, :Form_upload_time))
 
-        groupby([:Participant, :Trigger_counter])
+        groupby([:MovisensXSParticipantID, :Trigger_counter])
         transform(
             :FormStart => minimum,
             :FormFinish => maximum;
