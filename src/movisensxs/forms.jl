@@ -124,7 +124,7 @@ function Base.parse(::Type{MovisensXSMedication}, medication::Union{String, Miss
     ismissing(medication) && return missing
 
     # remove medications that were not taken
-    dicts = filter(x -> x["taken"] == 0, JSON.parse(medication))
+    dicts = filter(x -> x["taken"] != 0, JSON.parse(medication))
 
     return (
         [x["name"] for x in dicts],
