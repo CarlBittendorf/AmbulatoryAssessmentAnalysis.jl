@@ -430,7 +430,13 @@ gather(x::AbstractVector{UInt8}, T::Type; args...) = gather(ZipReader(x), T; arg
 gather(io::IO, T::Type; args...) = gather(read(io), T; args...)
 
 function gather(dict::Dict{String, IO}, T::Type; args...)
-    vcat((gather(dict[x], T; args...) for x in filter(endswith(".zip"), keys(dict)))...)
+    filenames = @chain dict begin
+        keys
+        filter(endswith(".zip"), _)
+        filter(!startswith("__"), _)
+    end
+
+    return vcat((gather(dict[x], T; args...) for x in filenames)...)
 end
 
 """

@@ -27,7 +27,8 @@
         dict = Dict{String, IO}(
             "1.zip" => IOBuffer(read("movisensxs/data/1.zip")),
             "2.zip" => IOBuffer(read("movisensxs/data/2.zip")),
-            "test.txt" => IOBuffer(b"AmbulatoryAssessmentAnalysis.jl")
+            "test.txt" => IOBuffer(b"AmbulatoryAssessmentAnalysis.jl"),
+            "__MACOSX/1.zip" => IOBuffer(b"AmbulatoryAssessmentAnalysis.jl")
         )
         @test names(gather(dict, T)) == variablenames(T)
     end
