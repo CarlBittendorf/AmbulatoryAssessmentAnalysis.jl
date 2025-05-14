@@ -454,8 +454,7 @@ SecondsTilting, SecondsUnknown
 * `MovisensXSTraffic`: ReceivedAppTraffic, ReceivedMobileTraffic, ReceivedTotalTraffic,
 TransmittedAppTraffic, TransmittedMobileTraffic, TransmittedTotalTraffic
 """
-function aggregate(
-        df::DataFrame, ::Type{MovisensXSCalls}, period::Period)
+function aggregate(df::DataFrame, ::Type{MovisensXSCalls}, period::Period)
     @chain df begin
         groupby_period(period; groupcols = [:MovisensXSParticipantID, :MovisensXSStudyID])
         combine(
@@ -470,8 +469,7 @@ function aggregate(
     end
 end
 
-function aggregate(
-        df::DataFrame, ::Type{MovisensXSDisplay}, period::Period)
+function aggregate(df::DataFrame, ::Type{MovisensXSDisplay}, period::Period)
     groupcols = [:MovisensXSParticipantID, :MovisensXSStudyID]
 
     @chain df begin
@@ -493,8 +491,28 @@ function aggregate(
     end
 end
 
-function aggregate(df::DataFrame, ::Type{MovisensXSPhysicalActivity},
-        period::Period)
+function aggregate(
+        df::DataFrame, ::Type{MovisensXSLocation}, period::Period;
+        max_velocity = 300, threshold = 20
+)
+    groupcols = [:MovisensXSParticipantID, :MovisensXSStudyID]
+
+    @chain df begin
+        filter_locations(; max_velocity, groupcols)
+
+        groupby_period(period; groupcols)
+        combine(
+            :Distance => sum => :KilometersTotal,
+            [:Distance, :Velocity] => ((d, v) -> sum(d[v .< threshold])) => :KilometersSlow,
+            [:Distance, :Velocity] => ((d, v) -> sum(d[v .>= threshold])) => :KilometersFast,
+            :Velocity => length => :MinutesMovingTotal,
+            :Velocity => (x -> count(x .< threshold)) => :MinutesMovingSlow,
+            :Velocity => (x -> count(x .>= threshold)) => :MinutesMovingFast
+        )
+    end
+end
+
+function aggregate(df::DataFrame, ::Type{MovisensXSPhysicalActivity}, period::Period)
     groupcols = [:MovisensXSParticipantID, :MovisensXSStudyID]
 
     @chain df begin
@@ -517,8 +535,7 @@ function aggregate(df::DataFrame, ::Type{MovisensXSPhysicalActivity},
     end
 end
 
-function aggregate(
-        df::DataFrame, ::Type{MovisensXSSteps}, period::Period)
+function aggregate(df::DataFrame, ::Type{MovisensXSSteps}, period::Period)
     @chain df begin
         subset(:Steps => x -> x .>= 0)
         groupby_period(period; groupcols = [:MovisensXSParticipantID, :MovisensXSStudyID])
@@ -526,8 +543,7 @@ function aggregate(
     end
 end
 
-function aggregate(
-        df::DataFrame, ::Type{MovisensXSTraffic}, period::Period)
+function aggregate(df::DataFrame, ::Type{MovisensXSTraffic}, period::Period)
     groupcols = [:MovisensXSParticipantID, :MovisensXSStudyID]
     variables = [:ReceivedAppTraffic, :ReceivedMobileTraffic, :ReceivedTotalTraffic,
         :TransmittedAppTraffic, :TransmittedMobileTraffic, :TransmittedTotalTraffic]

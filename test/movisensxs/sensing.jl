@@ -34,7 +34,9 @@
     end
 
     for T in (
-        MovisensXSCalls, MovisensXSDisplay, MovisensXSSteps, MovisensXSPhysicalActivity, MovisensXSTraffic)
+        MovisensXSCalls, MovisensXSDisplay, MovisensXSLocation, MovisensXSSteps,
+        MovisensXSPhysicalActivity, MovisensXSTraffic
+    )
         @test aggregate(gather("movisensxs/data/1.zip", T), T, Week(1)) isa DataFrame
         @test aggregate(gather("movisensxs/data/1.zip", T), T, Day(1)) isa DataFrame
         @test aggregate(gather("movisensxs/data/1.zip", T), T, Hour(12)) isa DataFrame

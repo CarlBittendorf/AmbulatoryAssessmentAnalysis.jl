@@ -1,6 +1,8 @@
 module AmbulatoryAssessmentAnalysis
 
-using Chain, DataFrames, CSV, XLSX, JSON, XML, ZipArchives, HTTP, ProgressMeter, ShiftedArrays
+using Chain, DataFrames, CSV, XLSX, JSON, XML, ZipArchives, HTTP, ProgressMeter,
+      ShiftedArrays
+using Distances: haversine
 using Dates, Statistics, UUIDs
 
 export load, gather, aggregate

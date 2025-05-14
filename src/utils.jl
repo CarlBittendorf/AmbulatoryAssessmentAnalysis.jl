@@ -9,7 +9,7 @@
 
 export fill_down, enumerate_days, enumerate_clusters, chunk, duration_to_next,
        duration_to_previous, groupby_period, insert_period_starts, fill_periods,
-       count_unique, count_changes, frequencies_of_occurrence
+       count_unique, count_changes, frequencies_of_occurrence, filter_locations
 
 ####################################################################################################
 # IMPLEMENTATIONS
@@ -384,6 +384,32 @@ function frequencies_of_occurrence(x)
         groupby(:X)
         combine(nrow)
         getproperty(:nrow)
+    end
+end
+
+function kilometers_to_previous(latitudes, longitudes)
+    map(
+        (u, v, x, y) -> haversine([u, v], [x, y]) / 1000,
+        ShiftedArrays.lag(latitudes; default = first(latitudes)),
+        ShiftedArrays.lag(longitudes; default = first(longitudes)),
+        latitudes,
+        longitudes
+    )
+end
+
+function filter_locations(df::DataFrame; max_velocity, groupcols = [])
+    @chain df begin
+        # use only the first entry of each minute
+        groupby_period(Minute(1); groupcols)
+        combine(All() .=> first; renamecols = false)
+
+        # calculate distances between consecutive entries
+        groupby(groupcols)
+        transform([:Latitude, :Longitude] => kilometers_to_previous => :Distance)
+
+        # remove values implying velocities > max_velocity
+        transform(:Distance => ByRow(x -> x * 60) => :Velocity)
+        subset(:Velocity => (x -> x .<= max_velocity))
     end
 end
 
