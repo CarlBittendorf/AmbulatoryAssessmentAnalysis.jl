@@ -448,6 +448,8 @@ Here are the types of mobile sensing data and the calculated variables that curr
 * `MovisensXSCalls`: IncomingCalls, IncomingCalls, IncomingMissedCalls, IncomingMissedCalls,
 SecondsCallDuration, UniqueConversationPartners
 * `MovisensXSDisplay`: CountDisplayOn, SecondsDisplayOff, SecondsDisplayOn
+* `MovisensXSLocation`: KilometersTotal, KilometersSlow, KilometersFast, MinutesMovingTotal,
+MinutesMovingSlow, MinutesMovingFast
 * `MovisensXSPhysicalActivity`: SecondsInVehicle, SecondsOnBicycle, SecondsOnFoot, SecondsStill,
 SecondsTilting, SecondsUnknown
 * `MovisensXSSteps`: Steps

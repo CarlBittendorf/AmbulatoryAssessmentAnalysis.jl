@@ -7,7 +7,7 @@
 # EXPORTS
 ####################################################################################################
 
-export fill_down, enumerate_days, enumerate_clusters, chunk, duration_to_next,
+export fill_down, fill_up, enumerate_days, enumerate_clusters, chunk, duration_to_next,
        duration_to_previous, groupby_period, insert_period_starts, fill_periods,
        count_unique, count_changes, frequencies_of_occurrence, filter_locations
 
@@ -42,6 +42,36 @@ julia> fill_down([missing, "x", missing, "y", missing])
 ```
 """
 fill_down(x) = accumulate((a, b) -> coalesce(b, a), x; init = coalesce(x...))
+
+"""
+    fill_up(x; maxsteps = length(x) - 1)
+
+Replace missing values with the next non-missing value (if it exists).
+
+# Examples
+
+```jldoctest
+julia> fill_up([1, 2, missing, 4, missing])
+5-element Vector{Union{Missing, Int64}}:
+ 1
+ 2
+ 4
+ 4
+  missing
+
+julia> fill_up([missing, missing, missing, missing, "x", "y"]; maxsteps = 3)
+6-element Vector{Union{Missing, String}}:
+ missing
+ "x"
+ "x"
+ "x"
+ "x"
+ "y"
+```
+"""
+function fill_up(x; maxsteps = length(x) - 1)
+    map(i -> coalesce(x[i:min(i + maxsteps, length(x))]...), eachindex(x))
+end
 
 """
     enumerate_days(x) -> Vector{Int}
