@@ -52,4 +52,13 @@
         aggregate(MovisensXSHourlyStates, Day(1);
             groupcols = [:MovisensXSParticipantID])
     end) == 6
+
+    push!(df, [1, DateTime("2025-01-06T22:00:00"), missing, missing, missing]; promote=true)
+
+    @test ncol(@chain df begin
+        groupby(:MovisensXSParticipantID)
+        transform([:HourlyStates, :FormTrigger] => parse(MovisensXSHourlyStates) => :HourlyStates)
+        aggregate(MovisensXSHourlyStates, Day(1);
+            groupcols = [:MovisensXSParticipantID])
+    end) == 6
 end

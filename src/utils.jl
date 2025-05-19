@@ -393,7 +393,7 @@ julia> count_changes(collect(1:10))
 9
 ```
 """
-count_changes(x) = count(x .!= ShiftedArrays.lag(x; default = first(x)))
+count_changes(x) = isempty(x) ? 0 : count(x .!= ShiftedArrays.lag(x; default = first(x)))
 
 """
     frequencies_of_occurrence(x) -> Vector{Int}
