@@ -226,3 +226,21 @@ function preprocess(df::DataFrame, ::Type{MovisensXSForms})
         combine(All() .=> (x -> coalesce(x...)); renamecols = false)
     end
 end
+
+function aggregate(df::DataFrame, ::Type{MovisensXSHourlyStates}, period::Period;
+        timecol = :FormTrigger, groupcols = [], statescol = :HourlyStates)
+    @chain df begin
+        flatten(statescol)
+
+        groupby([groupcols..., timecol])
+        transform(timecol => (x -> [floor(first(x), Day) + Hour(i) for i in 0:23]) => :DateTime)
+
+        groupby_period(period; groupcols)
+        combine(
+            statescol => (x -> count(isequal("Asleep"), skipmissing(x))) => :HoursAsleep,
+            statescol => (x -> count(isequal("LyingInBed"), skipmissing(x))) => :HoursLyingInBed,
+            statescol => (x -> count(isequal("Awake"), skipmissing(x))) => :HoursAwake,
+            statescol => (x -> count_changes(collect(skipmissing(x)))) => :StateChanges
+        )
+    end
+end

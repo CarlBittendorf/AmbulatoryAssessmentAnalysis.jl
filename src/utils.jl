@@ -73,6 +73,8 @@ function fill_up(x; maxsteps = length(x) - 1)
     map(i -> coalesce(x[i:min(i + maxsteps, length(x))]...), eachindex(x))
 end
 
+fill_up(; maxsteps = length(x) - 1) = x -> fill_up(x; maxsteps)
+
 """
     enumerate_days(x) -> Vector{Int}
 

@@ -4,8 +4,8 @@
 
     df = DataFrame(
         :MovisensXSParticipantID => repeat(1:3; inner = 5),
-        :FormStart => range(Date("2025-01-01"); length = 15, step = Day(1)) .+
-                      rand(Time.(["20:30:00", "21:30:00", "22:00:00"]), 15),
+        :FormTrigger => range(Date("2025-01-01"); length = 15, step = Day(1)) .+
+                        rand(Time.(["20:30:00", "21:30:00", "22:00:00"]), 15),
         :HourlyStates => map(x -> JSON.json(Dict("hourStateArray" => x)),
             [rand([0, 1, 2], 24) for _ in 1:15]),
         :Medication => [JSON.json([Dict(
@@ -30,7 +30,7 @@
 
     @test ncol(@chain df begin
         groupby(:MovisensXSParticipantID)
-        transform([:HourlyStates, :FormStart] => parse(MovisensXSHourlyStates) => :HourlyStates)
+        transform([:HourlyStates, :FormTrigger] => parse(MovisensXSHourlyStates) => :HourlyStates)
     end) == 5
 
     @test ncol(transform(
@@ -45,4 +45,11 @@
             :StaticLocationNames, :StaticLocationDateTimes, :StaticLatitudes,
             :StaticLongitudes, :StaticLocationConfidences, :StaticLocationRadii]
     )) == 11
+
+    @test ncol(@chain df begin
+        groupby(:MovisensXSParticipantID)
+        transform([:HourlyStates, :FormTrigger] => parse(MovisensXSHourlyStates) => :HourlyStates)
+        aggregate(MovisensXSHourlyStates, Day(1);
+            groupcols = [:MovisensXSParticipantID])
+    end) == 6
 end
