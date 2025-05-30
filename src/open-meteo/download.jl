@@ -211,7 +211,11 @@ function Base.download(
         result = Base.download(T, latitude, longitude, start_date, end_date;
             hourly, daily, args...)
 
-        dicts[i] = result
+        if result isa Vector
+            dicts[i] = result
+        else
+            dicts[i] = [result]
+        end
     end
 
     grid_latitudes = vcat((subset(df_chunks, :Chunk => ByRow(isequal(i))).GridLatitude for i in eachindex(dicts))...)
