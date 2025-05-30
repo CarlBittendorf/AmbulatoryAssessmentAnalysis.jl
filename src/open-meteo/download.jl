@@ -69,21 +69,24 @@ end
 
 function _openmeteo_cluster(x; maxgap = 3)
     indices = sort(eachindex(x); by = i -> x[i])
+    dates = x[indices]
     labels = repeat([uuid4()], length(x))
 
     uuid = first(labels)
 
-    for (i, date) in enumerate(x[indices])
+    for (i, date) in enumerate(dates)
         i == 1 && continue
 
-        if date - x[indices][i - 1] > Day(maxgap)
+        if date - dates[i - 1] > Day(maxgap)
             uuid = uuid4()
         end
 
-        labels[indices][i] = uuid
+        labels[i] = uuid
     end
 
-    return labels
+    reverse_indices = sort(eachindex(x); by = i -> indices[i])
+
+    return labels[reverse_indices]
 end
 
 function _openmeteo_chunk(x; maxlength = 1000)
