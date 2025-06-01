@@ -67,7 +67,7 @@ function _openmeteo_download(url; timeout::Int = 180, sleeptime = 10, args...)
     throw(HTTP.Exceptions.TimeoutError(timeout))
 end
 
-function _openmeteo_cluster(x; maxgap = 3)
+function _openmeteo_cluster(x; maxgap = 3, maxlength = 1000)
     indices = sort(eachindex(x); by = i -> x[i])
     dates = x[indices]
     labels = repeat([uuid4()], length(x))
@@ -77,7 +77,7 @@ function _openmeteo_cluster(x; maxgap = 3)
     for (i, date) in enumerate(dates)
         i == 1 && continue
 
-        if date - dates[i - 1] > Day(maxgap)
+        if date - dates[i - 1] > Day(maxgap) || count(isequal(uuid), labels) >= maxlength
             uuid = uuid4()
         end
 
@@ -87,6 +87,10 @@ function _openmeteo_cluster(x; maxgap = 3)
     reverse_indices = sort(eachindex(x); by = i -> indices[i])
 
     return labels[reverse_indices]
+end
+
+function _openmeteo_cluster(; maxgap = 3, maxlength = 1000)
+    x -> _openmeteo_cluster(x; maxgap, maxlength)
 end
 
 function _openmeteo_chunk(x; maxlength = 1000)
@@ -106,6 +110,8 @@ function _openmeteo_chunk(x; maxlength = 1000)
 
     return labels
 end
+
+_openmeteo_chunk(; maxlength = 1000) = x -> _openmeteo_chunk(x; maxlength)
 
 ####################################################################################################
 # HIGH-LEVEL FUNCTIONS
@@ -154,9 +160,16 @@ and longitudes, respectively.
 
 Tip: The download time can often be shortened by rounding the GPS coordinates to one or two decimal places.
 """
-function Base.download(
-        ::Type{T}, df::DataFrame; hourly = [], daily = [], timecol = :DateTime,
-        latitudecol = :Latitude, longitudecol = :Longitude, args...) where {T <: OpenMeteo}
+function Base.download(::Type{T}, df::DataFrame;
+        hourly = [],
+        daily = [],
+        timecol = :DateTime,
+        latitudecol = :Latitude,
+        longitudecol = :Longitude,
+        maxgap = 3,
+        maxlength = 1000,
+        args...
+) where {T <: OpenMeteo}
     # unique locations in the dataframe
     df_locations = @chain df begin
         groupby([latitudecol, longitudecol])
@@ -189,7 +202,7 @@ function Base.download(
         transform(timecol => ByRow(Date) => :Date)
 
         groupby([:GridLatitude, :GridLongitude])
-        transform(:Date => _openmeteo_cluster => :Cluster)
+        transform(:Date => _openmeteo_cluster(; maxgap, maxlength) => :Cluster)
 
         groupby(:Cluster)
         combine(
@@ -198,8 +211,9 @@ function Base.download(
             :Date => maximum => :EndDate;
             renamecols = false
         )
+
         transform([:StartDate, :EndDate] => ByRow((s, e) -> Dates.value(e - s) + 1) => :Length)
-        transform(:Length => _openmeteo_chunk => :Chunk)
+        transform(:Length => _openmeteo_chunk(; maxlength) => :Chunk)
     end
 
     dicts = repeat([[Dict{String, Any}()]], length(unique(df_chunks.Chunk)))
@@ -208,8 +222,10 @@ function Base.download(
         df_chunk = subset(df_chunks, :Chunk => ByRow(isequal(i)))
         _, latitude, longitude, start_date, end_date = eachcol(df_chunk)
 
-        result = Base.download(T, latitude, longitude, start_date, end_date;
-            hourly, daily, args...)
+        result = Base.download(
+            T, latitude, longitude, start_date, end_date;
+            hourly, daily, args...
+        )
 
         if result isa Vector
             dicts[i] = result
@@ -256,8 +272,8 @@ function Base.download(
             select(Not(:time))
         end
     else
-        df_hourly = DataFrame([name => []
-                               for name in [:DateTimeHourly, :GridLatitude, :GridLongitude]])
+        df_hourly = DataFrame(
+            [name => [] for name in [:DateTimeHourly, :GridLatitude, :GridLongitude]])
     end
 
     @chain df begin
@@ -273,9 +289,9 @@ function Base.download(
 end
 
 function Base.download(::Type{T}, datetime::AbstractVector{Union{Date, DateTime}},
-        latitude, longitude; hourly = [], daily = [], args...) where {T <: OpenMeteo}
+        latitude, longitude; args...) where {T <: OpenMeteo}
     Base.download(
         T, DataFrame(:DateTime => datetime, :Latitude => latitude, :Longitude => longitude);
-        hourly, daily, args...
+        args...
     )
 end
