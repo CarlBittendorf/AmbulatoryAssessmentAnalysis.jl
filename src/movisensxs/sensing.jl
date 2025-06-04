@@ -445,6 +445,7 @@ end
 Aggregate mobile sensing data at the level of `period` (e.g. `Day(1)` or `Hour(6)`).
 
 Here are the types of mobile sensing data and the calculated variables that currently have implementations:
+* `MovisensXSAppUsage`: AppUsageDuration, AppUsageSessions, AppUsageFragmentation, AppUsageStickiness
 * `MovisensXSCalls`: IncomingCalls, IncomingCalls, IncomingMissedCalls, IncomingMissedCalls,
 SecondsCallDuration, UniqueConversationPartners
 * `MovisensXSDisplay`: CountDisplayOn, SecondsDisplayOff, SecondsDisplayOn
@@ -456,6 +457,58 @@ SecondsTilting, SecondsUnknown
 * `MovisensXSTraffic`: ReceivedAppTraffic, ReceivedMobileTraffic, ReceivedTotalTraffic,
 TransmittedAppTraffic, TransmittedMobileTraffic, TransmittedTotalTraffic
 """
+function aggregate(df::DataFrame, ::Type{MovisensXSAppUsage}, period::Period)
+    groupcols = [:MovisensXSParticipantID, :MovisensXSStudyID]
+
+    function cluster_sessions(x)
+        labels = ones(Int, length(x))
+
+        for i in eachindex(x)
+            i == 1 && continue
+
+            if endswith(x[i - 1], "SCREEN_OFF")
+                labels[i] = labels[i - 1] + 1
+            else
+                labels[i] = labels[i - 1]
+            end
+        end
+
+        return labels
+    end
+
+    function session_durations(i, d)
+        @chain begin
+            DataFrame(:SessionIndex => i, :Duration => d)
+
+            groupby(:SessionIndex)
+            combine(:Duration => sum; renamecols = false)
+
+            getproperty(:Duration)
+        end
+    end
+
+    @chain df begin
+        insert_period_starts(period; groupcols)
+
+        groupby(groupcols)
+        transform(
+            [:AppName, :AppAction] .=> fill_down,
+            :DateTime => duration_to_next(period) => :Duration;
+            renamecols = false
+        )
+
+        groupby_period(period; groupcols)
+        transform(:AppAction => cluster_sessions => :SessionIndex; ungroup = false)
+        subset(:AppAction => ByRow(!endswith("SCREEN_OFF")); ungroup = false)
+        combine(
+            :Duration => sum => :AppUsageDuration,
+            :SessionIndex => count_unique => :AppUsageSessions,
+            [:SessionIndex, :Duration] => ((i, d) -> length(i) == 0 ? missing : sum(abs2, session_durations(i, d)) / abs2(sum(d))) => :AppUsageFragmentation,
+            [:SessionIndex, :Duration] => ((i, d) -> length(i) == 0 ? missing : log(maximum(session_durations(i, d)))) => :AppUsageStickiness
+        )
+    end
+end
+
 function aggregate(df::DataFrame, ::Type{MovisensXSCalls}, period::Period)
     @chain df begin
         groupby_period(period; groupcols = [:MovisensXSParticipantID, :MovisensXSStudyID])
