@@ -1,7 +1,7 @@
 name = "AmbulatoryAssessmentAnalysis"
 uuid = "562e0ae9-293a-420f-a40f-ca28bb40a5c4"
 authors = ["CarlBittendorf <carl.bittendorf@gmail.com> and contributors"]
-version = "0.0.3"
+version = "0.0.4"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"

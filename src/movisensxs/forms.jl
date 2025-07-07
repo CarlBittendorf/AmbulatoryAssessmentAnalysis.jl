@@ -80,10 +80,10 @@ function Base.parse(::Type{MovisensXSHourlyStates}, states, starts)
             :DateTime => vcat(filter(!ismissing, datetime_arrays)...),
             :HourlyState => vcat(filter(!ismissing, state_arrays)...)
         )
-        groupby(:DateTime)
 
         # if a participant has provided different information about the same hour, set it to missing
-        combine(:HourlyState => (x -> allequal(x) ? first(x) : missing) => :HourlyState)
+        groupby(:DateTime)
+        combine(:HourlyState => (x -> !isempty(x) && allequal(x) ? first(x) : missing) => :HourlyState)
 
         # add rows with missing for hours that were not specified
         leftjoin(DataFrame(:DateTime => unique_datetimes), _; on = :DateTime)
@@ -98,12 +98,17 @@ function Base.parse(::Type{MovisensXSHourlyStates}, states, starts)
             ));
             renamecols = false
         )
-        groupby(:Date)
 
         # group all 24 hours of a day into one vector
+        groupby(:Date)
         combine(:HourlyState => Ref => :HourlyStates)
 
-        leftjoin(DataFrame(:Date => Date.(skipmissing(starts))), _; on = :Date)
+        rightjoin(
+            DataFrame(:Date => map(x -> ismissing(x) ? x : Date(x), starts));
+            on = :Date,
+            matchmissing = :equal,
+            order = :right
+        )
         getproperty(:HourlyStates)
     end
 end
