@@ -208,13 +208,12 @@ function preprocess(df::DataFrame, ::Type{MovisensXSForms})
     @chain df begin
         transform(
             :Participant => ByRow(x -> round(Int, x)),
-            :Form => ByRow(x -> x == "Missing");
+            :Form => ByRow(x -> x == "Missing") => :IsMissing;
             renamecols = false
         )
         rename(
             :Participant => :MovisensXSParticipantID,
             :Trigger_date => :FormTrigger,
-            :Form => :IsMissing,
             :Form_start_date => :FormStart,
             :Form_finish_date => :FormFinish,
             :Form_upload_date => :FormUpload,
