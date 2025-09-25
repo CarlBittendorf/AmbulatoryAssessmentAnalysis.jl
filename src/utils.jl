@@ -431,8 +431,9 @@ end
 
 function filter_locations(df::DataFrame; max_velocity, groupcols = [])
     @chain df begin
-        # use only the first entry of each minute
+        # use only the entry with the best confidence of each minute
         groupby_period(Minute(1); groupcols)
+        subset(:LocationConfidence => (x -> x .== minimum(x)); ungroup = false)
         combine(All() .=> first; renamecols = false)
 
         # calculate distances between consecutive entries
