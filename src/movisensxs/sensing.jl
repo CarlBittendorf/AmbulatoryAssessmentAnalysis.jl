@@ -412,7 +412,7 @@ function gather(archive::ZipReader, ::Type{T}; args...) where {T <: MovisensXSMo
     index = findfirst(x -> endswith(x, "unisens.xml"), zip_names(archive))
 
     if isnothing(index)
-        zipfiles = filter(endswith(x, ".zip"), zip_names(archive))
+        zipfiles = filter(endswith(".zip"), zip_names(archive))
 
         return vcat((gather(zip_readentry(archive, x), T; args...) for x in zipfiles)...)
     else
@@ -425,7 +425,9 @@ function gather(archive::ZipReader, ::Type{T}; args...) where {T <: MovisensXSMo
     end
 end
 
-gather(x::AbstractVector{UInt8}, T::Type; args...) = gather(ZipReader(x), T; args...)
+function gather(x::AbstractVector{UInt8}, T::Type; args...)
+    return length(x) >= 22 ? gather(ZipReader(x), T; args...) : DataFrame()
+end
 
 gather(io::IO, T::Type; args...) = gather(read(io), T; args...)
 

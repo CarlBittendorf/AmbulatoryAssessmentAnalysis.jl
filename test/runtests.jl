@@ -12,5 +12,7 @@ using Aqua, DataFrames, JSON, Chain
     include("movisensxs/sensing.jl")
     include("movisensxs/forms.jl")
 
+    include("mpath/sensing.jl")
+
     include("open-meteo/download.jl")
 end

@@ -470,3 +470,15 @@ function safe_rename(df::DataFrame, names)
         return rename(df, names)
     end
 end
+
+function safe_rename(df::DataFrame, pairs::Pair{String, String}...)
+    if ncol(df) == 0
+        return DataFrame((name => [] for (_, name) in collect(pairs))...)
+    else
+        return rename(df, filter(x -> first(x) in names(df), collect(pairs)))
+    end
+end
+
+function safe_select(df::DataFrame, cols)
+    select(df, filter(x -> x in names(df), cols))
+end
