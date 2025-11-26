@@ -18,5 +18,14 @@
         # folder containing zip files
         @test gather("mpath/data/1", T) isa DataFrame
         @test names(gather("mpath/data/1", T)) == variablenames(T)
+
+        # Dict{String,IO}
+        dict = Dict{String, IO}(
+            "1.zip" => IOBuffer(read("mpath/data/1/pxaf5_eFgtSQg5tMvfq2z0.zip")),
+            "2.zip" => IOBuffer(read("mpath/data/1/pxaf5_eOpuGn6LCeuwgI5h.zip")),
+            "test.txt" => IOBuffer(b"AmbulatoryAssessmentAnalysis.jl"),
+            "__MACOSX/1.zip" => IOBuffer(b"AmbulatoryAssessmentAnalysis.jl")
+        )
+        @test names(gather(dict, T)) == variablenames(T)
     end
 end

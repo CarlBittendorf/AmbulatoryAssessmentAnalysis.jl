@@ -371,15 +371,15 @@ process(df, ::Type{MPathWiFi}) = safe_rename(df, "ip" => "WiFiIPAddress")
 ####################################################################################################
 
 function _mpath_connection_id(path)
-    try
-        @chain path begin
-            basename
-            split("_"; keepempty = true)
-            _[3]
-            convert(String, _)
-        end
-    catch
-        println(path)
+    pieces = @chain path begin
+        basename
+        split("_"; keepempty = true)
+    end
+
+    if length(pieces) >= 3
+        return convert(String, pieces[3])
+    else
+        return missing
     end
 end
 
@@ -467,4 +467,15 @@ function gather(archive::ZipReader, ::Type{T}; args...) where {T <: MPathMobileS
     else
         return DataFrame((name => [] for name in variablenames(T))...)
     end
+end
+
+function gather(dict::Dict{String, IO}, ::Type{T}; args...) where {T <: MPathMobileSensing}
+    filenames = @chain dict begin
+        keys
+        filter(x -> endswith(x, ".zip") || endswith(x, ".json"), _)
+        filter(!startswith("__"), _)
+    end
+
+    return vcat((endswith(x, ".zip") ? gather(dict[x], T; args...) :
+                 _mpath_load(dict[x], _mpath_connection_id(x), T) for x in filenames)...)
 end
