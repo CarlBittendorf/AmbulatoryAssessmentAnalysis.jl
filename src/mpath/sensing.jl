@@ -55,7 +55,10 @@ julia> variablenames(MPathLocation)
  "DateTime"
  "Latitude"
  "Longitude"
- ⋮
+ "Altitude"
+ "LocationAccuracy"
+ "VerticalAccuracy"
+ "Speed"
  "SpeedAccuracy"
  "Heading"
  "LocationDateTime"
@@ -456,12 +459,17 @@ function gather(path::AbstractString, ::Type{T}; args...) where {T <: MPathMobil
 end
 
 function gather(archive::ZipReader, ::Type{T}; args...) where {T <: MPathMobileSensing}
-    jsonfiles = filter(endswith(".json"), zip_names(archive))
+    filenames = @chain archive begin
+        zip_names
+        filter(x -> endswith(x, ".zip") || endswith(x, ".json"), _)
+        filter(!startswith("__"), _)
+    end
 
-    if !isempty(jsonfiles)
+    if !isempty(filenames)
         return vcat(
-            (_mpath_load(
-                 IOBuffer(zip_readentry(archive, x)), _mpath_connection_id(x), T; args...) for x in jsonfiles)...;
+            (endswith(x, ".zip") ? gather(IOBuffer(zip_readentry(archive, x)), T; args...) :
+             _mpath_load(
+                 IOBuffer(zip_readentry(archive, x)), _mpath_connection_id(x), T; args...) for x in filenames)...;
             cols = :union
         )
     else
