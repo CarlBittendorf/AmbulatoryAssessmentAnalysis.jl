@@ -435,6 +435,15 @@ function _mpath_load(source, connectionid, ::Type{T}) where {T <: MPathMobileSen
     end
 end
 
+function _mpath_read_zipentry(archive, filename)
+    try
+        return IOBuffer(zip_readentry(archive, filename))
+    catch
+    end
+
+    return IOBuffer("")
+end
+
 ####################################################################################################
 # HIGH-LEVEL FUNCTIONS
 ####################################################################################################
@@ -471,9 +480,9 @@ function gather(archive::ZipReader, ::Type{T}; args...) where {T <: MPathMobileS
 
     if !isempty(filenames)
         return vcat(
-            (endswith(x, ".zip") ? gather(IOBuffer(zip_readentry(archive, x)), T; args...) :
+            (endswith(x, ".zip") ? gather(_mpath_read_zipentry(archive, x), T; args...) :
              _mpath_load(
-                 IOBuffer(zip_readentry(archive, x)), _mpath_connection_id(x), T; args...) for x in filenames)...;
+                 _mpath_read_zipentry(archive, x), _mpath_connection_id(x), T; args...) for x in filenames)...;
             cols = :union
         )
     else
