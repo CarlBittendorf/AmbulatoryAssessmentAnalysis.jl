@@ -408,7 +408,11 @@ function _mpath_load(source, connectionid, ::Type{T}) where {T <: MPathMobileSen
 
     entries = @chain json begin
         JSON.parse
-        filter(x -> haskey(x["data"], "__type") && x["data"]["__type"] == typename(T), _)
+        filter(
+            x -> haskey(x, "data") && haskey(x["data"], "__type") &&
+                     x["data"]["__type"] == typename(T),
+            _
+        )
     end
 
     if isempty(entries)
