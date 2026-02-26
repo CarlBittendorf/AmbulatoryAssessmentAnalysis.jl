@@ -422,7 +422,9 @@ function _mpath_load(source, connectionid, ::Type{T}) where {T <: MPathMobileSen
             DataFrame
 
             # ensure that all entries have the same keys, so AsTable does not throw an error
-            subset(:data => (x -> length.(keys.(x)) .== maximum(length.(keys.(x)))))
+            transform(:data => ByRow(keys) => :Keys)
+            transform(:Keys => (x -> x[findmax(length.(x))[2]]) => :CompleteKeys)
+            subset([:Keys, :CompleteKeys] => ByRow(isequal))
 
             transform(
                 All() => ((x...) -> connectionid) => :MPathConnectionID,
