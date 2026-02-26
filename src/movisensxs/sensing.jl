@@ -512,16 +512,37 @@ function aggregate(df::DataFrame, ::Type{MovisensXSAppUsage}, period::Period)
 end
 
 function aggregate(df::DataFrame, ::Type{MovisensXSCalls}, period::Period)
+    groupcols = [:MovisensXSParticipantID, :MovisensXSStudyID]
+
     @chain df begin
-        groupby_period(period; groupcols = [:MovisensXSParticipantID, :MovisensXSStudyID])
+        groupby(groupcols)
         combine(
-            nrow => :TotalCalls,
-            :CallType => (x -> count(x .== "Incoming")) => :IncomingCalls,
-            :CallType => (x -> count(x .== "Outgoing")) => :OutgoingCalls,
-            :CallType => (x -> count(x .== "IncomingMissed")) => :IncomingMissedCalls,
-            :CallType => (x -> count(x .== "OutgoingNotReached")) => :OutgoingNotReachedCalls,
-            :CallDuration => sum => :SecondsCallDuration,
-            :PartnerHash => (x -> length(unique(x))) => :UniqueConversationPartners
+            :DateTime => ByRow(x -> [true, false]) => :CallStart,
+            [:DateTime, :CallDuration] => ByRow((dt, d) -> [dt, dt + Second(d)]) => :DateTime,
+            [:CallType, :PartnerHash] .=> first;
+            renamecols = false
+        )
+
+        flatten([:DateTime, :CallStart])
+
+        insert_period_starts(period; groupcols)
+
+        groupby(groupcols)
+        transform(
+            [:CallStart, :CallType, :PartnerHash] .=> fill_down,
+            :DateTime => duration_to_next(period) => :CallDuration;
+            renamecols = false
+        )
+
+        groupby_period(period; groupcols)
+        combine(
+            :CallStart => count => :TotalCalls,
+            [:CallStart, :CallType] => ((s, t) -> count(t[s] .== "Incoming")) => :IncomingCalls,
+            [:CallStart, :CallType] => ((s, t) -> count(t[s] .== "Outgoing")) => :OutgoingCalls,
+            [:CallStart, :CallType] => ((s, t) -> count(t[s] .== "IncomingMissed")) => :IncomingMissedCalls,
+            [:CallStart, :CallType] => ((s, t) -> count(t[s] .== "OutgoingNotReached")) => :OutgoingNotReachedCalls,
+            [:CallStart, :CallDuration] => ((s, d) -> sum(d[s])) => :SecondsCallDuration,
+            [:CallStart, :PartnerHash] => ((s, p) -> count_unique(p[s])) => :UniqueConversationPartners
         )
     end
 end
