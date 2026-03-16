@@ -230,7 +230,7 @@ function process(df, ::Type{MPathAmbientLight})
 end
 
 function process(df, ::Type{MPathAppUsage})
-    @chain df begin
+    df_usage = @chain df begin
         safe_rename(
             "start" => "AppUsageStart",
             "end" => "AppUsageEnd",
@@ -239,20 +239,27 @@ function process(df, ::Type{MPathAppUsage})
         transform(:AppUsage => ByRow(x -> collect(values(x))); renamecols = false)
         flatten(:AppUsage)
         transform(:AppUsage => AsTable)
-        safe_rename(
-            "packageName" => "AppName",
-            "appName" => "AppShortName",
-            "usage" => "AppUsageDuration",
-            "startDate" => "AppStart",
-            "endDate" => "AppEnd",
-            "lastForeground" => "AppLastForeground"
-        )
-        transform(
-            :AppUsageDuration => ByRow(x -> x / 1000000),
-            [:AppUsageStart, :AppUsageEnd, :AppStart, :AppEnd, :AppLastForeground] .=>
-                ByRow(x -> DateTime(x[1:23]));
-            renamecols = false
-        )
+    end
+
+    if nrow(df_usage) == 0
+        return DataFrame((name => [] for name in variablenames(MPathAppUsage))...)
+    else
+        return @chain df_usage begin
+            safe_rename(
+                "packageName" => "AppName",
+                "appName" => "AppShortName",
+                "usage" => "AppUsageDuration",
+                "startDate" => "AppStart",
+                "endDate" => "AppEnd",
+                "lastForeground" => "AppLastForeground"
+            )
+            transform(
+                :AppUsageDuration => ByRow(x -> x / 1000000),
+                [:AppUsageStart, :AppUsageEnd, :AppStart, :AppEnd, :AppLastForeground] .=>
+                    ByRow(x -> DateTime(x[1:23]));
+                renamecols = false
+            )
+        end
     end
 end
 
