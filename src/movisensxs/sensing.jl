@@ -118,7 +118,8 @@ filenames(::Type{MovisensXSSteps}) = ["Steps.csv"]
 filenames(::Type{MovisensXSTraffic}) = ["TrafficRx.csv", "TrafficTx.csv"]
 
 # define methods via metaprogramming to avoid repetitive code
-for (type, names) in [
+for (type,
+    names) in [
     MovisensXSAppUsage => ["AppName", "AppAction"],
     MovisensXSBattery => ["BatteryLevel"],
     MovisensXSCalls => ["CallType", "PartnerHash", "CallDuration"],
@@ -231,8 +232,9 @@ function load(source, ::Type{MovisensXSNearbyDevices})
             "ProximityUUID", "Type", "Value", "MinorValue"])
         transform(
             :BeaconEvent => ByRow(uppercasefirst),
-            [:Type, :Value] => ByRow((t, x) -> t == "major" ? [x, missing] : [missing, x]) => [
-                :MajorValue, :BeaconURL];
+            [:Type, :Value] =>
+                ByRow((t, x) -> t == "major" ? [x, missing] : [missing, x]) => [
+                    :MajorValue, :BeaconURL];
             renamecols = false
         )
         transform(
@@ -309,7 +311,8 @@ function load(sources::Vector{T}, ::Type{MovisensXSTraffic}) where {T}
 end
 
 # define methods via metaprogramming to avoid repetitive code
-for (type, names) in [
+for (type,
+    names) in [
     MovisensXSBattery => ["BatteryLevel"],
     MovisensXSLocation => ["Latitude", "Longitude", "Altitude", "LocationConfidence"],
     MovisensXSSteps => ["Steps"]
@@ -346,11 +349,17 @@ function _movisensxs_process(::Type{T}, sources, unisens;
 
     @chain sources begin
         load(T)
+        transform(
+            :SecondsSinceStart =>
+                ByRow(x -> x isa Int ? x : parse(Int, replace(x, r"\D" => "")));
+            renamecols = false
+        )
         callback(participantid, studyid)
         transform(
             All() => ((x...) -> participantid) => :MovisensXSParticipantID,
             All() => ((x...) -> studyid) => :MovisensXSStudyID,
-            :SecondsSinceStart => ByRow(x -> start + Millisecond(round(Int, x * 1000))) => :DateTime
+            :SecondsSinceStart =>
+                ByRow(x -> start + Millisecond(round(Int, x * 1000))) => :DateTime
         )
         select(variablenames(T))
     end
@@ -505,8 +514,15 @@ function aggregate(df::DataFrame, ::Type{MovisensXSAppUsage}, period::Period)
         combine(
             :Duration => sum => :AppUsageDuration,
             :SessionIndex => count_unique => :AppUsageSessions,
-            [:SessionIndex, :Duration] => ((i, d) -> length(i) == 0 ? missing : sum(abs2, session_durations(i, d)) / abs2(sum(d))) => :AppUsageFragmentation,
-            [:SessionIndex, :Duration] => ((i, d) -> length(i) == 0 ? missing : log(maximum(session_durations(i, d)))) => :AppUsageStickiness
+            [:SessionIndex, :Duration] =>
+                ((i,
+                    d) -> length(i) == 0 ? missing :
+                          sum(abs2, session_durations(i, d)) / abs2(sum(d))) =>
+                    :AppUsageFragmentation,
+            [:SessionIndex, :Duration] =>
+                ((i,
+                    d) -> length(i) == 0 ? missing :
+                          log(maximum(session_durations(i, d)))) => :AppUsageStickiness
         )
     end
 end
@@ -518,7 +534,8 @@ function aggregate(df::DataFrame, ::Type{MovisensXSCalls}, period::Period)
         groupby(groupcols)
         combine(
             :DateTime => ByRow(x -> [true, false]) => :CallStart,
-            [:DateTime, :CallDuration] => ByRow((dt, d) -> [dt, dt + Second(d)]) => :DateTime,
+            [:DateTime, :CallDuration] =>
+                ByRow((dt, d) -> [dt, dt + Second(d)]) => :DateTime,
             [:CallType, :PartnerHash] .=> first;
             renamecols = false
         )
@@ -537,12 +554,18 @@ function aggregate(df::DataFrame, ::Type{MovisensXSCalls}, period::Period)
         groupby_period(period; groupcols)
         combine(
             :CallStart => count => :TotalCalls,
-            [:CallStart, :CallType] => ((s, t) -> count(t[s] .== "Incoming")) => :IncomingCalls,
-            [:CallStart, :CallType] => ((s, t) -> count(t[s] .== "Outgoing")) => :OutgoingCalls,
-            [:CallStart, :CallType] => ((s, t) -> count(t[s] .== "IncomingMissed")) => :IncomingMissedCalls,
-            [:CallStart, :CallType] => ((s, t) -> count(t[s] .== "OutgoingNotReached")) => :OutgoingNotReachedCalls,
+            [:CallStart, :CallType] =>
+                ((s, t) -> count(t[s] .== "Incoming")) => :IncomingCalls,
+            [:CallStart, :CallType] =>
+                ((s, t) -> count(t[s] .== "Outgoing")) => :OutgoingCalls,
+            [:CallStart, :CallType] =>
+                ((s, t) -> count(t[s] .== "IncomingMissed")) => :IncomingMissedCalls,
+            [:CallStart, :CallType] =>
+                ((s, t) -> count(t[s] .== "OutgoingNotReached")) =>
+                    :OutgoingNotReachedCalls,
             [:CallStart, :CallDuration] => ((s, d) -> sum(d[s])) => :SecondsCallDuration,
-            [:CallStart, :PartnerHash] => ((s, p) -> count_unique(p[s])) => :UniqueConversationPartners
+            [:CallStart, :PartnerHash] =>
+                ((s, p) -> count_unique(p[s])) => :UniqueConversationPartners
         )
     end
 end
@@ -582,7 +605,8 @@ function aggregate(
         combine(
             :Distance => sum => :KilometersTotal,
             [:Distance, :Velocity] => ((d, v) -> sum(d[v .< threshold])) => :KilometersSlow,
-            [:Distance, :Velocity] => ((d, v) -> sum(d[v .>= threshold])) => :KilometersFast,
+            [:Distance, :Velocity] =>
+                ((d, v) -> sum(d[v .>= threshold])) => :KilometersFast,
             :Velocity => length => :MinutesMovingTotal,
             :Velocity => (x -> count(x .< threshold)) => :MinutesMovingSlow,
             :Velocity => (x -> count(x .>= threshold)) => :MinutesMovingFast
@@ -596,20 +620,28 @@ function aggregate(df::DataFrame, ::Type{MovisensXSPhysicalActivity}, period::Pe
     @chain df begin
         sort(:DateTime)
         groupby(groupcols)
-        transform(:DateTime => duration_to_previous(period; maxduration = 60) => :PhysicalActivityDuration)
+        transform(:DateTime =>
+            duration_to_previous(period; maxduration = 60) => :PhysicalActivityDuration)
 
         groupby_period(period; groupcols)
         combine(
-            [:PhysicalActivityDuration, :PhysicalActivityType] => ((d, t) -> sum(d[t .== "InVehicle"])) => :SecondsInVehicle,
-            [:PhysicalActivityDuration, :PhysicalActivityType] => ((d, t) -> sum(d[t .== "OnBicycle"])) => :SecondsOnBicycle,
-            [:PhysicalActivityDuration, :PhysicalActivityType] => ((d, t) -> sum(d[t .== "OnFoot"])) => :SecondsOnFoot,
-            [:PhysicalActivityDuration, :PhysicalActivityType] => ((d, t) -> sum(d[t .== "Still"])) => :SecondsStill,
-            [:PhysicalActivityDuration, :PhysicalActivityType] => ((d, t) -> sum(d[t .== "Tilting"])) => :SecondsTilting
+            [:PhysicalActivityDuration, :PhysicalActivityType] =>
+                ((d, t) -> sum(d[t .== "InVehicle"])) => :SecondsInVehicle,
+            [:PhysicalActivityDuration, :PhysicalActivityType] =>
+                ((d, t) -> sum(d[t .== "OnBicycle"])) => :SecondsOnBicycle,
+            [:PhysicalActivityDuration, :PhysicalActivityType] =>
+                ((d, t) -> sum(d[t .== "OnFoot"])) => :SecondsOnFoot,
+            [:PhysicalActivityDuration, :PhysicalActivityType] =>
+                ((d, t) -> sum(d[t .== "Still"])) => :SecondsStill,
+            [:PhysicalActivityDuration, :PhysicalActivityType] =>
+                ((d, t) -> sum(d[t .== "Tilting"])) => :SecondsTilting
         )
 
         # all remaining time is treated as unknown
-        transform([:SecondsInVehicle, :SecondsOnBicycle, :SecondsOnFoot, :SecondsStill, :SecondsTilting]
-        => ((x...) -> Dates.value(Second(period)) .- sum(x)) => :SecondsUnknown)
+        transform([:SecondsInVehicle, :SecondsOnBicycle,
+            :SecondsOnFoot, :SecondsStill, :SecondsTilting]
+        =>
+            ((x...) -> Dates.value(Second(period)) .- sum(x)) => :SecondsUnknown)
     end
 end
 
